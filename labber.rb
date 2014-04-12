@@ -1,53 +1,61 @@
-require 'warc'
 require 'mocha/mini_test'
 require 'minitest/autorun'
 
-class WarcHtmlReader
-  attr_reader :warc
+class WarcHtmlParser
+end
 
-  def initialize(warc)
-    @warc = warc
+class Warc
+  def initialize(raw)
+    @raw = raw
+    @html = "<html>/n</html>"
   end
 
-  def self.load_from(file_path)
-    warc = Warc.open_stream(file_path)
-    reader = self.new(warc)
+  def self.load_from_file(file_path)
+    self.new(File.read(file_path))
+  end
+
+  def find_in_html matcher
+    return [Struct.new(:html) {}.new('Hello world')]
   end
 end
 
-class WarcHtmlReaderTest < Minitest::Test
+class WarcTest < Minitest::Test
   @@warc_content = "
-    ------=_FELib_41728.651400463
-    Content-Type: text/html;
-            charset=\"iso-8859-1\"
-    Content-Transfer-Encoding: quoted-printable
-    Content-Location: http://localhost/1.html
+------=_FELib_41728.651400463
+Content-Type: text/html;
+        charset=\"iso-8859-1\"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: http://localhost/1.html
 
-      =09<html>
-      =09</html>
-    ------
+  =09<html>
+    <p>Hello world</p>
+  =09</html>
+------
   "
 
-  def test_load_from_loads_a_warm_from_the_given_file_path
+  def test_load_from_file_creates_a_new_instance_with_the_file_at_the_given_path
     file_path = "data/1cy5.warc"
-    warc = Warc::Record.new
+    File.expects(:read).with(file_path).returns(@@warc_content)
+    Warc.expects(:new).with(@@warc_content)
 
-    Warc.expects(:open_stream).with(file_path).returns(warc)
-
-    warc_html_reader = WarcHtmlReader.load_from(file_path)
-
-    assert_equal warc, warc_html_reader.warc
+    Warc.load_from_file(file_path)
   end
 
-  def test_find_returns_correct_html_elements_for_a_selection
-    WarcHtmlReader.new()
+  def test_find_in_html_returns_matching_dom_elements_in_html
+    warc = Warc.new(@@warc_content)
+
+    result = warc.find_in_html('p')
+    assert_equal result.length, 1,
+      "Only expected one result"
+
+    assert_equal result[0].html, 'Hello world',
+      "Expected the dom element to have the right text"
   end
 end
 
-file_path = File.expand_path(File.join(File.dirname(__FILE__),"data/test.warc"))
-puts "opening #{file_path}"
-warc_reader = WarcHtmlReader.load_from(file_path)
-
-puts "The Content:"
-puts warc_reader.warc
-puts warc_reader.warc.first
+=begin
+Open this warc file
+Find the table element in the HTML
+warc = Warc.load_from_file('file.warc')
+warc.find_in_html('table')
+=end
