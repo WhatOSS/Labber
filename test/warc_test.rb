@@ -1,29 +1,7 @@
 require 'minitest/autorun'
 require 'mocha/mini_test'
-require 'nokogiri'
 
-class Warc
-  def initialize(raw)
-    @raw = raw
-  end
-
-  def self.load_from_file(file_path)
-    self.new(File.read(file_path))
-  end
-
-  def get_html
-    last_html_block = @raw.split(/Content-Type: text\/html;/).last
-    last_html_block = last_html_block.split(/^$\n/).last
-    last_html_block = last_html_block.gsub(/\n^------$/, "")
-    last_html_block.gsub("=09", "")
-  end
-
-  def find_in_html matcher
-    document = Nokogiri::HTML(self.get_html)
-
-    return document.css(matcher)
-  end
-end
+require 'warc'
 
 class WarcTest < Minitest::Test
   @@warc_content = "
@@ -69,10 +47,3 @@ Content-Location: http://localhost/1.html
     assert_equal html, expected_html
   end
 end
-
-=begin
-Open this warc file
-Find the table element in the HTML
-warc = Warc.load_from_file('file.warc')
-warc.find_in_html('table')
-=end
