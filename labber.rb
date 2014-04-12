@@ -1,8 +1,6 @@
 require 'mocha/mini_test'
 require 'minitest/autorun'
-
-class WarcHtmlParser
-end
+require 'nokogiri'
 
 class Warc
   def initialize(raw)
@@ -15,7 +13,9 @@ class Warc
   end
 
   def find_in_html matcher
-    return [Struct.new(:html) {}.new('Hello world')]
+    document = Nokogiri::HTML(self.get_html())
+
+    return document.css(matcher)
   end
 end
 
@@ -44,12 +44,20 @@ Content-Location: http://localhost/1.html
   def test_find_in_html_returns_matching_dom_elements_in_html
     warc = Warc.new(@@warc_content)
 
+    warc.expects(:get_html).returns("<html>
+      <p>Hello world</p>
+    </html>")
+
     result = warc.find_in_html('p')
     assert_equal result.length, 1,
       "Only expected one result"
 
-    assert_equal result[0].html, 'Hello world',
+    assert_equal result[0].content, 'Hello world',
       "Expected the dom element to have the right text"
+  end
+
+  def test_find_in_html_returns_only_html_from_warc
+    skip("Implement me")
   end
 end
 
