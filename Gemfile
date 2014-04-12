@@ -3,4 +3,4 @@ source "https://rubygems.org"
 
 gem "minitest"
 gem 'mocha'
-gem 'warc'
+gem 'debugger'
