@@ -1,19 +1,25 @@
-require 'mocha/mini_test'
 require 'minitest/autorun'
+require 'mocha/mini_test'
 require 'nokogiri'
 
 class Warc
   def initialize(raw)
     @raw = raw
-    @html = "<html>/n</html>"
   end
 
   def self.load_from_file(file_path)
     self.new(File.read(file_path))
   end
 
+  def get_html
+    last_html_block = @raw.split(/Content-Type: text\/html;/).last
+    last_html_block = last_html_block.split(/^$\n/).last
+    last_html_block = last_html_block.gsub(/\n^------$/, "")
+    last_html_block.gsub("=09", "")
+  end
+
   def find_in_html matcher
-    document = Nokogiri::HTML(self.get_html())
+    document = Nokogiri::HTML(self.get_html)
 
     return document.css(matcher)
   end
@@ -30,8 +36,7 @@ Content-Location: http://localhost/1.html
   =09<html>
     <p>Hello world</p>
   =09</html>
-------
-  "
+------"
 
   def test_load_from_file_creates_a_new_instance_with_the_file_at_the_given_path
     file_path = "data/1cy5.warc"
@@ -44,10 +49,6 @@ Content-Location: http://localhost/1.html
   def test_find_in_html_returns_matching_dom_elements_in_html
     warc = Warc.new(@@warc_content)
 
-    warc.expects(:get_html).returns("<html>
-      <p>Hello world</p>
-    </html>")
-
     result = warc.find_in_html('p')
     assert_equal result.length, 1,
       "Only expected one result"
@@ -57,7 +58,15 @@ Content-Location: http://localhost/1.html
   end
 
   def test_find_in_html_returns_only_html_from_warc
-    skip("Implement me")
+    warc = Warc.new(@@warc_content)
+
+    html = warc.get_html
+
+    expected_html = "  <html>
+    <p>Hello world</p>
+  </html>"
+
+    assert_equal html, expected_html
   end
 end
 
