@@ -1,10 +1,10 @@
 require 'minitest/autorun'
 require 'mocha/mini_test'
 
-require 'warc'
+require 'mht'
 
-class WarcTest < Minitest::Test
-  @@warc_content = "
+class MhtTest < Minitest::Test
+  @@mht_content = "
 ------=_FELib_41728.651400463
 Content-Type: text/html;
         charset=\"iso-8859-1\"
@@ -17,17 +17,17 @@ Content-Location: http://localhost/1.html
 ------"
 
   def test_load_from_file_creates_a_new_instance_with_the_file_at_the_given_path
-    file_path = "data/1cy5.warc"
-    File.expects(:read).with(file_path).returns(@@warc_content)
-    Warc.expects(:new).with(@@warc_content)
+    file_path = "data/1cy5.mht"
+    File.expects(:read).with(file_path).returns(@@mht_content)
+    Mht.expects(:new).with(@@mht_content)
 
-    Warc.load_from_file(file_path)
+    Mht.load_from_file(file_path)
   end
 
   def test_find_in_html_returns_matching_dom_elements_in_html
-    warc = Warc.new(@@warc_content)
+    mht = Mht.new(@@mht_content)
 
-    result = warc.find_in_html('p')
+    result = mht.find_in_html('p')
     assert_equal result.length, 1,
       "Only expected one result"
 
@@ -35,10 +35,10 @@ Content-Location: http://localhost/1.html
       "Expected the dom element to have the right text"
   end
 
-  def test_find_in_html_returns_only_html_from_warc
-    warc = Warc.new(@@warc_content)
+  def test_find_in_html_returns_only_html_from_mht
+    mht = Mht.new(@@mht_content)
 
-    html = warc.get_html
+    html = mht.get_html
 
     expected_html = "  <html>
     <p>Hello world</p>

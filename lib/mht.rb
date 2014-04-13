@@ -1,6 +1,6 @@
 require 'nokogiri'
 
-class Warc
+class Mht
   def initialize(raw)
     @raw = raw
   end
